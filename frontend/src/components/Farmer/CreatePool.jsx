@@ -7,38 +7,35 @@ const CreatePool = ({ onSuccess }) => {
   const [rate, setRate] = useState('');
   const [quantity, setQuantity] = useState('');
   const [initialContribution, setInitialContribution] = useState('');
-  const [nearbyFarmers, setNearbyFarmers] = useState([]);
-  const [createdPools, setCreatedPools] = useState([]);
-  const [selectedPoolId, setSelectedPoolId] = useState('');
+  const [expectedCompletionDate, setExpectedCompletionDate] = useState('');
+  const [location, setLocation] = useState({
+    address: '',
+    city: '',
+    state: '',
+    pincode: ''
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const { user, API_URL } = useAuth();
+  const { API_URL } = useAuth();
 
   useEffect(() => {
-    fetchNearbyFarmers();
-    fetchMyPools();
+    fetchMyLocation();
   }, []);
 
-  const fetchMyPools = async () => {
+  const fetchMyLocation = async () => {
     try {
       const response = await axios.get(`${API_URL}/farmer/dashboard`);
-      const pools = response.data.pools || [];
-      setCreatedPools(pools.filter(p => p.status === 'active'));
-      if (pools.length > 0 && !selectedPoolId) {
-        setSelectedPoolId(pools[0]._id);
-      }
+      const farmer = response.data?.farmer;
+      const loc = farmer?.location || {};
+      setLocation({
+        address: loc.address || '',
+        city: loc.city || '',
+        state: loc.state || '',
+        pincode: loc.pincode || ''
+      });
     } catch (err) {
-      console.error('Error fetching pools:', err);
-    }
-  };
-
-  const fetchNearbyFarmers = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/farmer/nearby-farmers`);
-      setNearbyFarmers(response.data.nearbyFarmers || []);
-    } catch (err) {
-      console.error('Error fetching nearby farmers:', err);
+      console.error('Error fetching location:', err);
     }
   };
 
@@ -78,7 +75,14 @@ const CreatePool = ({ onSuccess }) => {
           }
         ],
         targetQuantity: targetQty,
-        initialContribution: initialQty
+        initialContribution: initialQty,
+        location: {
+          address: location.address || '',
+          city: location.city || '',
+          state: location.state || '',
+          pincode: location.pincode || ''
+        },
+        expectedCompletionDate: expectedCompletionDate || undefined
       });
 
       setSuccess('Pool created successfully!');
@@ -86,30 +90,12 @@ const CreatePool = ({ onSuccess }) => {
       setRate('');
       setQuantity('');
       setInitialContribution('');
-      setSelectedPoolId(response.data.pool._id);
-      fetchMyPools();
+      setExpectedCompletionDate('');
       if (onSuccess) onSuccess();
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create pool');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const sendPoolRequest = async (farmerId) => {
-    if (!selectedPoolId) {
-      alert('Please create a pool first or select an existing pool');
-      return;
-    }
-    try {
-      await axios.post(`${API_URL}/farmer/pool/request`, {
-        poolId: selectedPoolId,
-        toFarmerId: farmerId
-      });
-      alert('Pool request sent successfully!');
-      fetchNearbyFarmers();
-    } catch (err) {
-      alert(err.response?.data?.message || 'Failed to send request');
     }
   };
 
@@ -187,11 +173,57 @@ const CreatePool = ({ onSuccess }) => {
                 placeholder="Rate (₹)"
                 value={rate}
                 onChange={(e) => setRate(e.target.value)}
-                className="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                className="w-full sm:w-32 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                 required
                 min="0"
               />
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+            <textarea
+              rows="3"
+              value={location.address}
+              onChange={(e) => setLocation((prev) => ({ ...prev, address: e.target.value }))}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+              placeholder="House/Street, Locality"
+            />
+            <div className="grid grid-cols-2 gap-3 mt-3">
+              <input
+                type="text"
+                value={location.city}
+                onChange={(e) => setLocation((prev) => ({ ...prev, city: e.target.value }))}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                placeholder="City"
+              />
+              <input
+                type="text"
+                value={location.pincode}
+                onChange={(e) => setLocation((prev) => ({ ...prev, pincode: e.target.value }))}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                placeholder="Pincode"
+              />
+              <input
+                type="text"
+                value={location.state}
+                onChange={(e) => setLocation((prev) => ({ ...prev, state: e.target.value }))}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 col-span-2"
+                placeholder="State"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Expected Completion Date
+            </label>
+            <input
+              type="date"
+              value={expectedCompletionDate}
+              onChange={(e) => setExpectedCompletionDate(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+            />
           </div>
 
           <button
@@ -202,59 +234,6 @@ const CreatePool = ({ onSuccess }) => {
             {loading ? 'Creating Pool...' : 'Create Pool'}
           </button>
         </form>
-      </div>
-
-      {/* Nearby Farmers */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-2xl font-bold mb-4">Nearby Farmers</h2>
-        
-        {createdPools.length > 0 && (
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Select Pool to Send Request From:
-            </label>
-            <select
-              value={selectedPoolId}
-              onChange={(e) => setSelectedPoolId(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-            >
-              {createdPools.map((pool) => (
-                <option key={pool._id} value={pool._id}>
-                  Pool #{pool._id.slice(-6)} - {pool.cropTypes.map(c => c.type).join(', ')}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        {nearbyFarmers.length > 0 ? (
-          <div className="space-y-4">
-            {nearbyFarmers.map((farmer) => (
-              <div key={farmer._id} className="border rounded-lg p-4">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="font-semibold">Mobile: {farmer.mobileNumber}</p>
-                    <p className="text-sm text-gray-600">
-                      Distance: {farmer.distance?.toFixed(2)} km
-                    </p>
-                    {farmer.location?.address && (
-                      <p className="text-sm text-gray-500">{farmer.location.address}</p>
-                    )}
-                  </div>
-                  <button
-                    onClick={() => sendPoolRequest(farmer._id)}
-                    disabled={!selectedPoolId}
-                    className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Send Request
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-gray-500">No nearby farmers found.</p>
-        )}
       </div>
     </div>
   );

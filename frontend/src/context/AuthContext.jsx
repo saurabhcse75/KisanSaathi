@@ -4,7 +4,10 @@ import axios from 'axios';
 const AuthContext = createContext();
 
 // Backend routes are mounted under `/api/*` (see backend `app.use('/api/...')`).
-// So API_URL must include the `/api` prefix.
+// So API_URL must include the `/api` prefix (this file auto-appends `/api`).
+//
+// Default for production deployment (Render):
+// - https://kisansaathi-backend-k97r.onrender.com/api
 let API_URL = import.meta.env.VITE_API_URL || 'https://kisansaathi-backend-k97r.onrender.com';
 API_URL = API_URL.replace(/\/+$/, ''); // trim trailing slashes
 if (!API_URL.endsWith('/api')) {

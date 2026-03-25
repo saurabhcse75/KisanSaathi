@@ -6,20 +6,22 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100">
       {/* Header */}
-      <header className="bg-white shadow-md">
+      <header className="bg-white shadow-sm border-b border-gray-100">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-primary-700">🌾 Kisan Saathi</h1>
-            <div className="flex gap-4">
+            <h1 className="text-xl sm:text-2xl font-bold text-primary-700">
+              🌾 Kisan Saathi
+            </h1>
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-stretch sm:items-center">
               <Link
                 to="/farmer/login"
-                className="px-4 py-2 text-primary-700 hover:text-primary-800 font-medium"
+                className="px-4 py-2 text-primary-700 hover:text-primary-800 font-semibold rounded-xl hover:bg-primary-50 transition-colors"
               >
                 Farmer Login
               </Link>
               <Link
                 to="/buyer/login"
-                className="px-4 py-2 text-primary-700 hover:text-primary-800 font-medium"
+                className="px-4 py-2 text-primary-700 hover:text-primary-800 font-semibold rounded-xl hover:bg-primary-50 transition-colors"
               >
                 Buyer Login
               </Link>
@@ -31,10 +33,10 @@ const Home = () => {
       {/* Hero Section */}
       <main className="container mx-auto px-4 py-16">
         <div className="text-center mb-16">
-          <h2 className="text-5xl font-bold text-gray-800 mb-4">
+          <h2 className="text-4xl sm:text-5xl font-extrabold text-gray-900 mb-4">
             Empowering Small Farmers
           </h2>
-          <p className="text-xl text-gray-600 mb-8">
+          <p className="text-base sm:text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
             Connect, Collaborate, and Sell Your Crops Directly to Buyers
           </p>
         </div>
@@ -42,10 +44,10 @@ const Home = () => {
         {/* Features */}
         <div className="grid md:grid-cols-2 gap-8 mb-16">
           {/* Farmer Card */}
-          <div className="bg-white rounded-lg shadow-lg p-8 hover:shadow-xl transition-shadow">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8 hover:shadow-md transition-shadow">
             <div className="flex items-center mb-4">
               <FaUser className="text-4xl text-primary-600 mr-4" />
-              <h3 className="text-2xl font-bold text-gray-800">For Farmers</h3>
+              <h3 className="text-2xl font-bold text-gray-900">For Farmers</h3>
             </div>
             <p className="text-gray-600 mb-6">
               Create pools with other farmers, sell directly, and reach more buyers in your area.
@@ -53,13 +55,13 @@ const Home = () => {
             <div className="space-y-4">
               <Link
                 to="/farmer/register"
-                className="block w-full bg-primary-600 text-white py-3 px-6 rounded-lg hover:bg-primary-700 transition-colors text-center font-medium"
+                className="block w-full bg-primary-600 text-white py-3 px-6 rounded-xl hover:bg-primary-700 transition-colors text-center font-semibold"
               >
                 Register as Farmer
               </Link>
               <Link
                 to="/farmer/login"
-                className="block w-full border-2 border-primary-600 text-primary-600 py-3 px-6 rounded-lg hover:bg-primary-50 transition-colors text-center font-medium"
+                className="block w-full border-2 border-primary-600 text-primary-600 py-3 px-6 rounded-xl hover:bg-primary-50 transition-colors text-center font-semibold"
               >
                 Farmer Login
               </Link>
@@ -67,10 +69,10 @@ const Home = () => {
           </div>
 
           {/* Buyer Card */}
-          <div className="bg-white rounded-lg shadow-lg p-8 hover:shadow-xl transition-shadow">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8 hover:shadow-md transition-shadow">
             <div className="flex items-center mb-4">
               <FaShoppingCart className="text-4xl text-primary-600 mr-4" />
-              <h3 className="text-2xl font-bold text-gray-800">For Buyers</h3>
+              <h3 className="text-2xl font-bold text-gray-900">For Buyers</h3>
             </div>
             <p className="text-gray-600 mb-6">
               Discover fresh crops from local farmers, filter by location and crop type, and connect directly.
@@ -78,13 +80,13 @@ const Home = () => {
             <div className="space-y-4">
               <Link
                 to="/buyer/register"
-                className="block w-full bg-primary-600 text-white py-3 px-6 rounded-lg hover:bg-primary-700 transition-colors text-center font-medium"
+                className="block w-full bg-primary-600 text-white py-3 px-6 rounded-xl hover:bg-primary-700 transition-colors text-center font-semibold"
               >
                 Register as Buyer
               </Link>
               <Link
                 to="/buyer/login"
-                className="block w-full border-2 border-primary-600 text-primary-600 py-3 px-6 rounded-lg hover:bg-primary-50 transition-colors text-center font-medium"
+                className="block w-full border-2 border-primary-600 text-primary-600 py-3 px-6 rounded-xl hover:bg-primary-50 transition-colors text-center font-semibold"
               >
                 Buyer Login
               </Link>
@@ -93,8 +95,8 @@ const Home = () => {
         </div>
 
         {/* How It Works */}
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          <h3 className="text-3xl font-bold text-gray-800 mb-8 text-center">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
+          <h3 className="text-3xl font-bold text-gray-900 mb-8 text-center">
             How It Works
           </h3>
           <div className="grid md:grid-cols-3 gap-6">

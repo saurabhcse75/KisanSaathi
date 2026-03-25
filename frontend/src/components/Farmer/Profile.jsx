@@ -94,46 +94,46 @@ const Profile = ({ onSuccess }) => {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Profile Display */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-2xl font-bold mb-6">Profile Details</h2>
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <h2 className="text-xl font-bold mb-4 text-gray-900">Profile Details</h2>
         {profileData ? (
           <div className="space-y-4">
             <div>
               <p className="text-sm font-medium text-gray-500">Name</p>
-              <p className="text-lg font-semibold text-gray-800">{profileData.name || user?.name || 'N/A'}</p>
+              <p className="text-base font-semibold text-gray-900">{profileData.name || user?.name || 'N/A'}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-gray-500">Mobile Number</p>
-              <p className="text-lg font-semibold text-gray-800">{profileData.mobileNumber || user?.mobileNumber || 'N/A'}</p>
+              <p className="text-base font-semibold text-gray-900">{profileData.mobileNumber || user?.mobileNumber || 'N/A'}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-gray-500">Kisan ID</p>
-              <p className="text-lg font-semibold text-gray-800">{profileData.kisanId || 'N/A'}</p>
+              <p className="text-base font-semibold text-gray-900">{profileData.kisanId || 'N/A'}</p>
             </div>
             {profileData.location && (
               <>
                 {profileData.location.address && (
                   <div>
                     <p className="text-sm font-medium text-gray-500">Address</p>
-                    <p className="text-lg text-gray-800">{profileData.location.address}</p>
+                    <p className="text-base text-gray-800">{profileData.location.address}</p>
                   </div>
                 )}
                 {profileData.location.city && (
                   <div>
                     <p className="text-sm font-medium text-gray-500">City</p>
-                    <p className="text-lg text-gray-800">{profileData.location.city}</p>
+                    <p className="text-base text-gray-800">{profileData.location.city}</p>
                   </div>
                 )}
                 {profileData.location.state && (
                   <div>
                     <p className="text-sm font-medium text-gray-500">State</p>
-                    <p className="text-lg text-gray-800">{profileData.location.state}</p>
+                    <p className="text-base text-gray-800">{profileData.location.state}</p>
                   </div>
                 )}
                 {profileData.location.pincode && (
                   <div>
                     <p className="text-sm font-medium text-gray-500">Pincode</p>
-                    <p className="text-lg text-gray-800">{profileData.location.pincode}</p>
+                    <p className="text-base text-gray-800">{profileData.location.pincode}</p>
                   </div>
                 )}
               </>
@@ -145,8 +145,8 @@ const Profile = ({ onSuccess }) => {
       </div>
 
       {/* Profile Update Form */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-2xl font-bold mb-6">Update Profile</h2>
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <h2 className="text-xl font-bold mb-4 text-gray-900">Update Profile</h2>
 
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
@@ -168,7 +168,7 @@ const Profile = ({ onSuccess }) => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Address
@@ -178,7 +178,7 @@ const Profile = ({ onSuccess }) => {
               value={formData.address}
               onChange={handleChange}
               rows="3"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               placeholder="Enter your full address"
             />
           </div>
@@ -193,7 +193,7 @@ const Profile = ({ onSuccess }) => {
                 name="city"
                 value={formData.city}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 placeholder="City"
               />
             </div>
@@ -207,7 +207,7 @@ const Profile = ({ onSuccess }) => {
                 name="state"
                 value={formData.state}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 placeholder="State"
               />
             </div>
@@ -223,24 +223,24 @@ const Profile = ({ onSuccess }) => {
               value={formData.pincode}
               onChange={handleChange}
               maxLength="6"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               placeholder="6-digit pincode"
             />
           </div>
 
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-3 pt-1">
             <button
               type="button"
               onClick={fetchCurrentLocation}
               disabled={locationLoading}
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50"
+              className="px-4 py-2 bg-gray-100 text-gray-800 rounded-xl hover:bg-gray-200 disabled:opacity-50 font-semibold"
             >
               {locationLoading ? 'Fetching...' : '📍 Get Current Location'}
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 bg-primary-600 text-white py-2 px-4 rounded-lg hover:bg-primary-700 transition-colors font-medium disabled:opacity-50"
+              className="flex-1 bg-primary-600 text-white py-2 px-4 rounded-xl hover:bg-primary-700 transition-colors font-semibold disabled:opacity-50"
             >
               {loading ? 'Updating...' : 'Update Profile'}
             </button>

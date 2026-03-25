@@ -5,7 +5,7 @@ import FarmerRegister from './components/Farmer/FarmerRegister';
 import FarmerLogin from './components/Farmer/FarmerLogin';
 import BuyerRegister from './components/Buyer/BuyerRegister';
 import BuyerLogin from './components/Buyer/BuyerLogin';
-import FarmerDashboard from './components/Farmer/FarmerDashboard';
+import FarmerDashboardV2 from './components/Farmer/FarmerDashboardV2';
 import BuyerDashboardV2 from './components/Buyer/BuyerDashboardV2';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
@@ -45,7 +45,7 @@ function App() {
             path="/farmer/dashboard"
             element={
               <PrivateRoute userType="farmer">
-                <FarmerDashboard />
+                <FarmerDashboardV2 />
               </PrivateRoute>
             }
           />

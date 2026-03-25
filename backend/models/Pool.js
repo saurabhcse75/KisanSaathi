@@ -35,7 +35,7 @@ const poolSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['active', 'locked', 'deleted'],
+    enum: ['active', 'locked', 'completed', 'deleted'],
     default: 'active'
   },
   members: [{
@@ -71,6 +71,9 @@ const poolSchema = new mongoose.Schema({
       required: true
     },
     address: String
+  },
+  expectedCompletionDate: {
+    type: Date
   },
   createdAt: {
     type: Date,

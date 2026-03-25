@@ -76,7 +76,7 @@ const PoolDiscovery = () => {
       <div className="bg-white rounded-lg shadow p-6 mb-6">
         <h2 className="text-2xl font-bold mb-4">Discover Nearby Pools</h2>
 
-        <div className="flex gap-4 items-center mb-4">
+        <div className="flex flex-col md:flex-row gap-3 md:items-center mb-4">
           <label className="text-sm font-medium text-gray-700">
             Filter by Distance (KM):
           </label>
@@ -84,7 +84,7 @@ const PoolDiscovery = () => {
             type="number"
             value={distanceFilter}
             onChange={(e) => setDistanceFilter(e.target.value)}
-            className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+            className="w-full md:w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
             min="1"
             max="200"
           />
@@ -193,7 +193,7 @@ const PoolDiscovery = () => {
                             }}
                             max={pool.remainingQuantity}
                             min="1"
-                            className="w-40 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                            className="w-full max-w-[260px] px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                           />
                           <button
                             onClick={() => handleContribute(pool._id)}

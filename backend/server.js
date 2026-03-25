@@ -19,7 +19,7 @@ app.use('/api/auth', require('./routes/authRoutes'));
 
 // MongoDB Connection
 const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/kisanSaathi';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://saurabh:Saurabh@8969@cluster0.vex1c44.mongodb.net/?kisansathi';
 
 mongoose.connect(MONGO_URI, {
   useNewUrlParser: true,

@@ -79,7 +79,7 @@ router.get('/dashboard', authenticateToken, async (req, res) => {
 // Create a pool
 router.post('/pool/create', authenticateToken, async (req, res) => {
   try {
-    const { cropTypes, location, targetQuantity, initialContribution } = req.body;
+    const { cropTypes, location, targetQuantity, initialContribution, expectedCompletionDate } = req.body;
 
     if (!cropTypes || !Array.isArray(cropTypes) || cropTypes.length === 0) {
       return res.status(400).json({ message: 'At least one crop type is required' });
@@ -101,13 +101,18 @@ router.post('/pool/create', authenticateToken, async (req, res) => {
 
     const remainingQty = targetQuantity - initialQty;
 
+    const resolvedLocation = location
+      ? { ...farmer.location, ...location }
+      : farmer.location;
+
     const pool = new Pool({
       creatorFarmer: req.user.id,
       cropTypes,
       targetQuantity: parseFloat(targetQuantity),
       initialContribution: initialQty,
       remainingQuantity: remainingQty,
-      location: location || farmer.location
+      location: resolvedLocation,
+      expectedCompletionDate: expectedCompletionDate ? new Date(expectedCompletionDate) : undefined
     });
 
     // Add creator as a member with initial contribution
@@ -324,34 +329,25 @@ router.put('/pool/:poolId/lock', authenticateToken, async (req, res) => {
     // Remove all pending members from pool
     pool.members = pool.members.filter(m => m.status !== 'pending');
 
-    // Create products for each crop type in the pool
+    // Create ONE aggregated product per crop type, owned by pool creator.
+    // This ensures buy requests always go to the pool creator (not each contributor).
     const acceptedMembers = pool.members.filter(m => m.status === 'accepted');
-    // Avoid duplicate farmer entries (e.g., creator can also be an accepted member).
-    const allFarmers = Array.from(
-      new Set([pool.creatorFarmer, ...acceptedMembers.map(m => m.farmer)].map(id => id.toString()))
-    );
+    const totalPoolQuantity = acceptedMembers.reduce((sum, m) => sum + (Number(m.quantity) || 0), 0);
 
     for (const cropType of pool.cropTypes) {
-      for (const farmerId of allFarmers) {
-        // Get member quantity if exists, otherwise use crop default
-        const member = acceptedMembers.find(m => m.farmer.toString() === farmerId.toString());
-        // Creator initial contribution is removed, so only use accepted member quantity.
-        const quantity = member?.quantity || 0;
+      // Avoid creating zero-quantity products.
+      if (!totalPoolQuantity || totalPoolQuantity <= 0) continue;
 
-        // Avoid creating zero-quantity product entries.
-        if (!quantity || quantity <= 0) continue;
-        
-        const product = new Product({
-          farmer: farmerId,
-          cropType: cropType.type,
-          quantity: quantity,
-          price: cropType.rate,
-          location: pool.location,
-          isFromPool: true,
-          poolId: pool._id
-        });
-        await product.save();
-      }
+      const product = new Product({
+        farmer: pool.creatorFarmer,
+        cropType: cropType.type,
+        quantity: totalPoolQuantity,
+        price: cropType.rate,
+        location: pool.location,
+        isFromPool: true,
+        poolId: pool._id
+      });
+      await product.save();
     }
 
     await pool.save();
@@ -359,6 +355,60 @@ router.put('/pool/:poolId/lock', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Lock pool error:', error);
     res.status(500).json({ message: 'Error locking pool', error: error.message });
+  }
+});
+
+// Edit pool quantity/price (creator only, when pool is active)
+router.put('/pool/:poolId/edit', authenticateToken, async (req, res) => {
+  try {
+    const { poolId } = req.params;
+    const { targetQuantity, cropRate } = req.body; // quantity and rate are for the single cropType
+
+    const pool = await Pool.findById(poolId);
+    if (!pool) return res.status(404).json({ message: 'Pool not found' });
+
+    if (pool.creatorFarmer.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Only pool creator can edit the pool' });
+    }
+
+    if (pool.status !== 'active') {
+      return res.status(400).json({ message: 'Cannot edit a locked/closed pool' });
+    }
+
+    const newTargetQty = targetQuantity !== undefined ? parseFloat(targetQuantity) : null;
+    if (newTargetQty !== null && (!newTargetQty || newTargetQty <= 0)) {
+      return res.status(400).json({ message: 'targetQuantity must be greater than 0' });
+    }
+
+    const newRate = cropRate !== undefined ? parseFloat(cropRate) : null;
+    if (newRate !== null && (!newRate || newRate < 0)) {
+      return res.status(400).json({ message: 'cropRate must be 0 or greater' });
+    }
+
+    if (newTargetQty === null && newRate === null) {
+      return res.status(400).json({ message: 'Nothing to update' });
+    }
+
+    if (newTargetQty !== null) pool.targetQuantity = newTargetQty;
+    if (newRate !== null && pool.cropTypes?.length) {
+      pool.cropTypes[0].rate = newRate;
+    }
+
+    // Recompute remaining quantity from accepted member quantities (including initialContribution).
+    const totalContributed = pool.members
+      .filter((m) => m.status === 'accepted')
+      .reduce((sum, m) => sum + (Number(m.quantity) || 0), 0);
+
+    pool.remainingQuantity = Math.max(0, pool.targetQuantity - totalContributed);
+
+    await pool.save();
+    await pool.populate('creatorFarmer', 'name mobileNumber location kisanId');
+    await pool.populate('members.farmer', 'name mobileNumber location kisanId address city state pincode');
+
+    res.json({ message: 'Pool updated successfully', pool });
+  } catch (error) {
+    console.error('Edit pool error:', error);
+    res.status(500).json({ message: 'Error editing pool', error: error.message });
   }
 });
 
@@ -374,6 +424,10 @@ router.delete('/pool/:poolId', authenticateToken, async (req, res) => {
 
     if (pool.creatorFarmer.toString() !== req.user.id) {
       return res.status(403).json({ message: 'Only pool creator can delete the pool' });
+    }
+
+    if (pool.status === 'locked') {
+      return res.status(400).json({ message: 'Locked pools cannot be deleted' });
     }
 
     pool.status = 'deleted';
@@ -419,6 +473,32 @@ router.post('/product/create', authenticateToken, async (req, res) => {
   }
 });
 
+// Delete/Remove direct product listing (farmer only)
+router.delete('/product/:productId', authenticateToken, async (req, res) => {
+  try {
+    const { productId } = req.params;
+
+    const product = await Product.findById(productId);
+    if (!product) return res.status(404).json({ message: 'Product not found' });
+
+    if (product.farmer.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Not authorized to delete this product' });
+    }
+
+    if (product.isFromPool) {
+      return res.status(400).json({ message: 'Pool products cannot be deleted from direct sell' });
+    }
+
+    product.status = 'removed';
+    await product.save();
+
+    res.json({ message: 'Product removed successfully', product });
+  } catch (error) {
+    console.error('Delete product error:', error);
+    res.status(500).json({ message: 'Error deleting product', error: error.message });
+  }
+});
+
 // Accept/Reject buy request
 router.put('/buy-request/:requestId', authenticateToken, async (req, res) => {
   try {
@@ -453,18 +533,13 @@ router.put('/buy-request/:requestId', authenticateToken, async (req, res) => {
 
           // If product is from a pool, mark pool as sold
           if (product.isFromPool && product.poolId) {
-            // Mark pool sold only when no available pool products remain.
-            const remainingAvailable = await Product.countDocuments({
-              poolId: product.poolId,
-              status: 'available'
-            });
-
-            if (remainingAvailable === 0) {
-              await Pool.findByIdAndUpdate(product.poolId, { isSold: true });
-            }
+            // Pool creator accepted buyer request: mark pool as completed for all farmers in pool.
+            await Pool.findByIdAndUpdate(product.poolId, { isSold: true, status: 'completed' });
           }
         }
       }
+
+      // Only the clicked request should be updated.
     } else if (action === 'reject') {
       request.status = 'rejected';
     } else {

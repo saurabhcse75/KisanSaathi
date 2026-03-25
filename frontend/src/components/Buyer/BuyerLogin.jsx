@@ -51,15 +51,16 @@ const BuyerLogin = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center py-12 px-4">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-xl p-8">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-800 mb-2">Buyer Login</h2>
-          <p className="text-gray-600">Welcome back to Kisan Saathi</p>
+      <div className="max-w-md w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-0 overflow-hidden">
+        <div className="p-6 sm:p-8 bg-gradient-to-r from-primary-600 to-indigo-600 text-white text-center">
+          <h2 className="text-2xl sm:text-3xl font-bold mb-2">Buyer Login</h2>
+          <p className="text-sm sm:text-base text-white/80">Welcome back to Kisan Saathi</p>
         </div>
+        <div className="p-6 sm:p-8 pt-6">
 
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-sm text-red-700">{error}</p>
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
+            <p className="text-sm text-red-700 font-medium">{error}</p>
           </div>
         )}
 
@@ -74,7 +75,7 @@ const BuyerLogin = () => {
               value={formData.mobileNumber}
               onChange={handleChange}
               maxLength="10"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               placeholder="10-digit mobile number"
               required
             />
@@ -89,7 +90,7 @@ const BuyerLogin = () => {
               name="password"
               value={formData.password}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               placeholder="Enter your password"
               required
             />
@@ -98,7 +99,7 @@ const BuyerLogin = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-primary-600 text-white py-3 px-4 rounded-lg hover:bg-primary-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-primary-600 text-white py-3 px-4 rounded-xl hover:bg-primary-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Logging in...' : 'Login'}
           </button>
@@ -107,16 +108,17 @@ const BuyerLogin = () => {
         <div className="mt-6 text-center">
           <p className="text-gray-600">
             Don't have an account?{' '}
-            <Link to="/buyer/register" className="text-primary-600 hover:text-primary-700 font-medium">
+            <Link to="/buyer/register" className="text-primary-600 hover:text-primary-700 font-semibold">
               Register here
             </Link>
           </p>
           <Link
             to="/"
-            className="mt-4 inline-block text-sm text-gray-500 hover:text-gray-700"
+            className="mt-4 inline-block text-sm text-gray-600 hover:text-gray-800 font-medium"
           >
             ← Back to Home
           </Link>
+        </div>
         </div>
       </div>
     </div>

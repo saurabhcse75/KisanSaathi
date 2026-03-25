@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 
@@ -12,7 +12,29 @@ const DirectSell = ({ onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [myProducts, setMyProducts] = useState([]);
+  const [buyRequests, setBuyRequests] = useState([]);
   const { API_URL } = useAuth();
+
+  const fetchMyProducts = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/farmer/dashboard`);
+      const products = res.data?.products || [];
+      const requests = res.data?.buyRequests || [];
+      setMyProducts(products);
+      setBuyRequests(requests);
+    } catch (err) {
+      console.error('Failed to fetch products', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchMyProducts();
+    const onUpdated = () => fetchMyProducts();
+    window.addEventListener('farmer-dashboard-updated', onUpdated);
+    return () => window.removeEventListener('farmer-dashboard-updated', onUpdated);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleChange = (e) => {
     setFormData({
@@ -50,6 +72,7 @@ const DirectSell = ({ onSuccess }) => {
         unit: 'kg'
       });
       if (onSuccess) onSuccess();
+      fetchMyProducts();
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create product');
     } finally {
@@ -57,8 +80,44 @@ const DirectSell = ({ onSuccess }) => {
     }
   };
 
+  const handleDeleteProduct = async (productId) => {
+    if (!window.confirm('Remove this listing?')) return;
+    try {
+      await axios.delete(`${API_URL}/farmer/product/${productId}`);
+      setSuccess('Listing removed successfully!');
+      fetchMyProducts();
+      if (onSuccess) onSuccess();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to remove listing');
+    }
+  };
+
+  const hasPendingRequestForProduct = (productId) => {
+    return (buyRequests || []).some(
+      (r) => r?.type === 'buy' && r?.status === 'pending' && String(r?.productId?._id || r?.productId) === String(productId)
+    );
+  };
+
+  const hasAcceptedRequestForProduct = (productId) => {
+    // Farmer acceptance is stored as status: "completed" in backend.
+    return (buyRequests || []).some(
+      (r) =>
+        r?.type === 'buy' &&
+        r?.status === 'completed' &&
+        String(r?.productId?._id || r?.productId) === String(productId)
+    );
+  };
+
+  const getDirectSellDisplayStatus = (product) => {
+    if (!product) return 'requested';
+    if (product.status === 'sold' || hasAcceptedRequestForProduct(product._id)) return 'sold';
+    if (hasPendingRequestForProduct(product._id)) return 'accepted by buyer';
+    // For newly listed products in direct sell module, show requested as required.
+    return 'requested';
+  };
+
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-4xl mx-auto space-y-6">
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-2xl font-bold mb-6">Sell Directly</h2>
 
@@ -151,6 +210,47 @@ const DirectSell = ({ onSuccess }) => {
             {loading ? 'Listing Product...' : 'List Product'}
           </button>
         </form>
+      </div>
+
+      <div className="bg-white rounded-lg shadow p-6">
+        <h3 className="text-xl font-bold mb-4">My Direct Sell Listings</h3>
+        {myProducts.filter(p => !p.isFromPool).length > 0 ? (
+          <div className="grid md:grid-cols-2 gap-4">
+            {myProducts
+              .filter(p => !p.isFromPool)
+              .map((p) => (
+                <div key={p._id} className="border border-gray-100 rounded-xl p-4">
+                  {(() => {
+                    const displayStatus = getDirectSellDisplayStatus(p);
+                    const statusClass =
+                      displayStatus === 'sold'
+                        ? 'text-green-700'
+                        : displayStatus === 'accepted by buyer'
+                          ? 'text-orange-700'
+                          : 'text-blue-700';
+                    return (
+                      <>
+                  <p className="font-semibold text-gray-900">{p.cropType}</p>
+                  <div className="mt-2 text-sm text-gray-700 space-y-1">
+                    <p><span className="font-medium">Quantity:</span> {p.quantity} {p.unit}</p>
+                    <p><span className="font-medium">Price:</span> ₹{p.price} / {p.unit}</p>
+                    <p>
+                      <span className="font-medium">Status:</span>{' '}
+                      <span className={`font-semibold ${statusClass}`}>
+                        {displayStatus}
+                      </span>
+                    </p>
+                  </div>
+
+                      </>
+                    );
+                  })()}
+                </div>
+              ))}
+          </div>
+        ) : (
+          <p className="text-gray-500">No direct sell listings yet.</p>
+        )}
       </div>
     </div>
   );

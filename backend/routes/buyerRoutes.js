@@ -24,9 +24,29 @@ router.get('/dashboard', authenticateToken, async (req, res) => {
       from: req.user.id,
       fromModel: 'Buyer'
     })
-      .populate('to', 'mobileNumber location')
-      .populate('productId')
-      .populate('poolId')
+      .populate('to', 'name mobileNumber location address city state pincode')
+      .populate({
+        path: 'productId',
+        populate: {
+          path: 'farmer',
+          select: 'name mobileNumber location kisanId address city state pincode'
+        }
+      })
+      .populate({
+        path: 'poolId',
+        select:
+          'creatorFarmer cropTypes status targetQuantity remainingQuantity location expectedCompletionDate members',
+        populate: [
+          {
+            path: 'creatorFarmer',
+            select: 'name mobileNumber kisanId location address city state pincode'
+          },
+          {
+            path: 'members.farmer',
+            select: 'name mobileNumber kisanId location'
+          }
+        ]
+      })
       .sort({ createdAt: -1 });
 
     res.json({
@@ -68,6 +88,21 @@ router.get('/products', authenticateToken, async (req, res) => {
 
     let products = await Product.find(query)
       .populate('farmer', 'name mobileNumber location kisanId address city state pincode')
+      .populate({
+        path: 'poolId',
+        select:
+          'creatorFarmer cropTypes status targetQuantity remainingQuantity location expectedCompletionDate members',
+        populate: [
+          {
+            path: 'creatorFarmer',
+            select: 'name mobileNumber kisanId location address city state pincode'
+          },
+          {
+            path: 'members.farmer',
+            select: 'name mobileNumber kisanId location'
+          }
+        ]
+      })
       .sort({ createdAt: -1 });
 
     // Filter by location and calculate distance
@@ -144,6 +179,41 @@ router.post('/request', authenticateToken, async (req, res) => {
   }
 });
 
+// Cancel/remove a pending buy request (buyer only)
+router.delete('/request/:requestId', authenticateToken, async (req, res) => {
+  try {
+    const { requestId } = req.params;
+
+    const request = await Request.findById(requestId);
+    if (!request) {
+      return res.status(404).json({ message: 'Request not found' });
+    }
+
+    if (request.from.toString() !== req.user.id || request.fromModel !== 'Buyer') {
+      return res.status(403).json({ message: 'Not authorized to cancel this request' });
+    }
+
+    if (request.type !== 'buy') {
+      return res.status(400).json({ message: 'This is not a buy request' });
+    }
+
+    if (request.status !== 'pending') {
+      return res.status(400).json({ message: 'Only pending requests can be removed' });
+    }
+
+    // Use existing enum value to avoid schema change.
+    request.status = 'rejected';
+    request.respondedAt = new Date();
+    request.message = request.message ? `${request.message} (cancelled by buyer)` : 'cancelled by buyer';
+    await request.save();
+
+    res.json({ message: 'Request removed successfully', request });
+  } catch (error) {
+    console.error('Cancel request error:', error);
+    res.status(500).json({ message: 'Error cancelling request', error: error.message });
+  }
+});
+
 // Get request status
 router.get('/requests', authenticateToken, async (req, res) => {
   try {
@@ -152,8 +222,28 @@ router.get('/requests', authenticateToken, async (req, res) => {
       fromModel: 'Buyer'
     })
       .populate('to', 'name mobileNumber location address city state pincode')
-      .populate('productId')
-      .populate('poolId')
+      .populate({
+        path: 'productId',
+        populate: {
+          path: 'farmer',
+          select: 'name mobileNumber location kisanId address city state pincode'
+        }
+      })
+      .populate({
+        path: 'poolId',
+        select:
+          'creatorFarmer cropTypes status targetQuantity remainingQuantity location expectedCompletionDate members',
+        populate: [
+          {
+            path: 'creatorFarmer',
+            select: 'name mobileNumber kisanId location address city state pincode'
+          },
+          {
+            path: 'members.farmer',
+            select: 'name mobileNumber kisanId location'
+          }
+        ]
+      })
       .sort({ createdAt: -1 });
 
     res.json({ requests });
