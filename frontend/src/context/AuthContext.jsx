@@ -3,8 +3,13 @@ import axios from 'axios';
 
 const AuthContext = createContext();
 
-// const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-const API_URL = import.meta.env.VITE_API_URL || 'https://kisansaathi-backend-k97r.onrender.com';
+// Backend routes are mounted under `/api/*` (see backend `app.use('/api/...')`).
+// So API_URL must include the `/api` prefix.
+let API_URL = import.meta.env.VITE_API_URL || 'https://kisansaathi-backend-k97r.onrender.com';
+API_URL = API_URL.replace(/\/+$/, ''); // trim trailing slashes
+if (!API_URL.endsWith('/api')) {
+  API_URL = `${API_URL}/api`;
+}
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
